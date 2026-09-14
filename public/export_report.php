@@ -1,0 +1,4 @@
+<?php
+require_once __DIR__ . '/../app/bootstrap.php';require_login();$type=$_GET['type']??'inventory';
+$sql='SELECT p.nombre,c.nombre categoria,p.precio,p.stock,p.stock_minimo,p.fecha_registro FROM productos p JOIN categorias c ON c.id=p.categoria_id';$filename='inventario_marckstock.csv';if($type==='low'){$sql.=' WHERE p.stock<=p.stock_minimo';$filename='stock_bajo_marckstock.csv';}$sql.=' ORDER BY p.nombre';$rows=db()->query($sql)->fetchAll();
+header('Content-Type: text/csv; charset=UTF-8');header('Content-Disposition: attachment; filename="'.$filename.'"');$out=fopen('php://output','w');fwrite($out,"ï»¿");fputcsv($out,['Producto','Categoría','Precio','Stock','Stock mínimo','Fecha'],';');foreach($rows as $r)fputcsv($out,[$r['nombre'],$r['categoria'],$r['precio'],$r['stock'],$r['stock_minimo'],$r['fecha_registro']],';');fclose($out);exit;

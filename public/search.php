@@ -1,0 +1,9 @@
+<?php
+require_once __DIR__ . '/../app/bootstrap.php'; require_login();
+$pageTitle='Buscar';$active='buscar';$q=trim((string)($_GET['q']??''));$results=[];
+if($q!==''){$s=db()->prepare('SELECT p.*,c.nombre categoria FROM productos p JOIN categorias c ON c.id=p.categoria_id WHERE p.nombre ILIKE :q OR c.nombre ILIKE :q ORDER BY p.nombre');$s->execute(['q'=>'%'.$q.'%']);$results=$s->fetchAll();}
+require __DIR__.'/../app/views/partials/header.php';
+?>
+<div class="page-head"><div><h1>Buscar productos</h1><p>Encuentra rápidamente un producto por nombre o categoría.</p></div></div>
+<section class="panel search-panel"><form method="get" class="big-search"><input class="form-control" autofocus name="q" value="<?= e($q) ?>" placeholder="Escribe nombre o categoría..."><button class="btn btn-primary">🔎 Buscar</button></form><?php if($q!==''):?><p class="result-note"><?= count($results) ?> resultado(s) para “<?= e($q) ?>”</p><div class="table-wrap"><table><thead><tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th><th></th></tr></thead><tbody><?php foreach($results as $p):$st=stock_status($p);?><tr><td><strong><?= e($p['nombre']) ?></strong></td><td><?= e($p['categoria']) ?></td><td><?= e(money($p['precio'])) ?></td><td><?= (int)$p['stock'] ?></td><td><span class="status <?= e($st['class']) ?>"><?= e($st['label']) ?></span></td><td><a class="btn btn-small btn-secondary" href="/product_form.php?id=<?= (int)$p['id'] ?>">Abrir</a></td></tr><?php endforeach;?></tbody></table></div><?php endif;?></section>
+<?php require __DIR__.'/../app/views/partials/footer.php'; ?>

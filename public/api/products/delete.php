@@ -1,0 +1,2 @@
+<?php
+require_once __DIR__ . '/../../../app/bootstrap.php';api_user();if(!in_array($_SERVER['REQUEST_METHOD'],['POST','DELETE'],true))api_response(['success'=>false,'mensaje'=>'Método no permitido.'],405);$d=json_input();if($_SERVER['REQUEST_METHOD']==='DELETE'&&empty($d))parse_str(file_get_contents('php://input'),$d);$id=(int)($d['id']??0);if($id<=0)api_response(['success'=>false,'mensaje'=>'ID inválido.'],422);db()->prepare('DELETE FROM productos WHERE id=:id')->execute(['id'=>$id]);api_response(['success'=>true,'mensaje'=>'Producto eliminado.']);
