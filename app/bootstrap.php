@@ -28,6 +28,58 @@ function ensure_schema(): void
         if ($sql === false) throw new RuntimeException('No se pudo leer schema.sql');
         $pdo->exec($sql);
     }
+    
+    // Migración: tabla de movimientos de inventario
+$movimientosExists = $pdo
+    ->query("SELECT to_regclass('public.movimientos_stock')")
+    ->fetchColumn();
+
+if (!$movimientosExists) {
+    $pdo->exec("
+        CREATE TABLE movimientos_stock (
+            id BIGSERIAL PRIMARY KEY,
+
+            producto_id BIGINT NOT NULL
+                REFERENCES productos(id)
+                ON UPDATE CASCADE
+                ON DELETE RESTRICT,
+
+            usuario_id BIGINT NOT NULL
+                REFERENCES usuarios(id)
+                ON UPDATE CASCADE
+                ON DELETE RESTRICT,
+
+            tipo VARCHAR(10) NOT NULL
+                CHECK (tipo IN ('ENTRADA', 'SALIDA')),
+
+            cantidad INTEGER NOT NULL
+                CHECK (cantidad > 0),
+
+            motivo VARCHAR(100) NOT NULL,
+            observacion VARCHAR(255),
+
+            stock_anterior INTEGER NOT NULL
+                CHECK (stock_anterior >= 0),
+
+            stock_nuevo INTEGER NOT NULL
+                CHECK (stock_nuevo >= 0),
+
+            fecha TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_movimientos_producto
+            ON movimientos_stock(producto_id);
+
+        CREATE INDEX IF NOT EXISTS idx_movimientos_usuario
+            ON movimientos_stock(usuario_id);
+
+        CREATE INDEX IF NOT EXISTS idx_movimientos_fecha
+            ON movimientos_stock(fecha);
+
+        CREATE INDEX IF NOT EXISTS idx_movimientos_tipo
+            ON movimientos_stock(tipo);
+    ");
+}
 
     $defaults = [
         'nombre_sistema' => getenv('APP_NAME') ?: 'MarckStock',
